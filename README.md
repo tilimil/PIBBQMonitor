@@ -28,7 +28,7 @@ mpg321<br>
 Setup
 ============
 1.  Install node and its deendencies: node-sqlite3, node-static
-2.  Install python and other packages: 
+2.  Install python and other packages: <br>
     sudo apt-get install python-dev<br>
     sudo apt-get install python-setuptools<br>
     sudo easy_install rpi.gpio<br>
