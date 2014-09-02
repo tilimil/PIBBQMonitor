@@ -11,7 +11,7 @@ Description
 ============
 Raspberry PI project leveraging the MCP3008 ADC and Thermoworks TX-1001X-OP thermistor temperature probes to create a 3 sensor wireless BBQ Temperature monitor.
 
-logger.py - python scrupt that reads ADC, calculates temp and logs to SQLlite database<br>
+logger.py - python script that reads ADC, calculates temp and logs to SQLite database<br>
 dbcleanup.sh - shell script to clear entries older than 24 hours<br>
 build_db.sh - script to build sqlite databse<br>
 /web/thermserv - node web server<br>
