@@ -29,11 +29,11 @@ Setup
 ============
 1.  Install node and its deendencies: node-sqlite3, node-static
 2.  Install python and other packages: 
-    sudo apt-get install python-dev
-    sudo apt-get install python-setuptools
-    sudo easy_install rpi.gpio
-    sudo apt-get install alsa-utils
-    sudo apt-get install mpg321
+    sudo apt-get install python-dev<br>
+    sudo apt-get install python-setuptools<br>
+    sudo easy_install rpi.gpio<br>
+    sudo apt-get install alsa-utils<br>
+    sudo apt-get install mpg321<br>
 3.  Clone git repository to /home/pi
 4.  Execute build_db.sh to create SQLite DB
 5.  Execute "sudo node thermserv" to start the node app.  You can enable this as a server to automatically start if you would like
