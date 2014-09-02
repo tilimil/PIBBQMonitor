@@ -13,7 +13,7 @@ Description
 
 Dependencies
 ============
-NodeJS
+NodeJS\n
 SQLite3
 node-sqlite3
 node-static
