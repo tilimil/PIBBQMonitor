@@ -1,29 +1,29 @@
 PIBBQMonitor
 ============
 
-Raspberry PI with 3 BBQ meat thermometers
-Thanks to Tomas Holderness and ADA fruit for the code I started with for this project
-https://learn.adafruit.com/reading-a-analog-in-and-controlling-audio-volume-with-the-raspberry-pi/script
-https://github.com/talltom/PiThermServer
+Raspberry PI with 3 BBQ meat thermometers<br>
+Thanks to Tomas Holderness and adafruit for the code I started with for this project<br>
+https://learn.adafruit.com/reading-a-analog-in-and-controlling-audio-volume-with-the-raspberry-pi/script<br>
+https://github.com/talltom/PiThermServer<br>
 
 
 Description
 ============
-
+Raspberry PI project leveraging the MCP3008 ADC and Thermoworks TX-1001X-OP thermistor temprature probes to create a 3 sensor wireless BBQ Temperature monitor.
 
 Dependencies
 ============
-NodeJS\n
-SQLite3
-node-sqlite3
-node-static
-Twitter Bootstrap 3.2.0 (included in repository)
-Highcharts (included in repository)
-JQuery (included in repository)
-python-dev
-python-setuptools
-alsa-utils
-mpg321
+NodeJS<br>
+SQLite3<br>
+node-sqlite3<br>
+node-static<br>
+Twitter Bootstrap 3.2.0 (included in repository)<br>
+Highcharts (included in repository)<br>
+JQuery (included in repository)<br>
+python-dev<br>
+python-setuptools<br>
+alsa-utils<br>
+mpg321<br>
 
 Setup
 ============
