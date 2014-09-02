@@ -1,0 +1,243 @@
+// server.js - NodeJS server for the temp server project.
+
+/* 
+
+Gets temperature from sqlite database and serves as a JSON object.
+Uses node-static module to serve a plot of current temperature (uses highcharts).
+
+Modified code from Tom Holderness 03/01/2013
+Ref: www.cl.cam.ac.uk/freshers/raspberrypi/tutorials/temperature/
+*/
+
+// Load node modules
+var fs = require('fs');
+var util = require('util');
+var http = require('http');
+var sqlite3 = require('sqlite3');
+var qs = require('querystring');
+
+// Use node-static module to server chart for client-side dynamic graph
+var nodestatic = require('node-static');
+
+// Setup static server for current directory
+var staticServer = new nodestatic.Server(".");
+
+// Setup database connection for logging
+var db = new sqlite3.Database('/home/pi/templog.db');
+
+// Get temperature records from database
+function selectTemp(num_sens, num_records, callback){
+   //multiple timestamp by 1000 because highcharts requires it in milliseconds and db is in seconds
+   //only get records from the last hour
+   //re-order query in ascending order for highcharts
+   var current_temp = db.all("SELECT * from (SELECT timestamp*1000 as x, sensnum, temp as y FROM temps where sensnum = ? and timestamp >= strftime('%s', 'now') - 3600 ORDER BY x DESC LIMIT ?) ORDER BY x ASC;", num_sens, num_records,
+      function(err, rows){
+         if (err){
+			   response.writeHead(500, { "Content-type": "text/html" });
+			   response.end(err + "\n");
+			   console.log('Error serving querying database. ' + err);
+			   return;
+				      }
+         data = {temperature_record:rows}
+         callback(data);
+   });
+};
+   
+// Get temperature records from database
+function selectTempnow(num_sens, callback){
+   //get most recent timestamp for sensor
+   var current_temp = db.all("SELECT (MAX(timestamp)*1000) as timestamp, sensnum, temp from temps where sensnum = ?;", num_sens,
+      function(err, rows){
+         if (err){
+			   response.writeHead(500, { "Content-type": "text/html" });
+			   response.end(err + "\n");
+			   console.log('Error serving querying database. ' + err);
+			   return;
+				      }
+         data = {temperature_record:rows}
+         callback(data);
+   });
+};
+
+// Setup node http server
+var server = http.createServer(
+	// Our main server function
+	function(request, response)
+	{
+		// Grab the URL requested by the client and parse any query options
+		var url = require('url').parse(request.url, true);
+		var pathfile = url.pathname;
+      var query = url.query;
+
+		// Test to see if it's a database query
+		if (pathfile == '/temperature_query.json'){
+         // Test to see if number of observations was specified as url query
+         if (query.num_obs){
+            var num_obs = parseInt(query.num_obs);
+         }
+         
+         else{
+         // If not specified default to 20. Note use -1 in query string to get all.
+            var num_obs = 60;
+         } 
+         
+         if (query.num_sens){
+            var num_sens = parseInt(query.num_sens);
+         }
+         else{
+         // If not specified default to 0
+            var num_sens = 0;
+         }
+         // Send a message to console log
+         //console.log('Database query request from '+ request.connection.remoteAddress +' for ' + num_obs + ' records' +'.');
+         // call selectTemp function to get data from database
+         selectTemp(num_sens, num_obs, function(data){
+            response.writeHead(200, { "Content-type": "application/json" });		
+	         response.end(JSON.stringify(data), "ascii");
+         });
+      return;
+      }
+      
+      if (pathfile == '/temperature_now.json'){
+         // Test to see if number of observations was specified as url query
+         
+         if (query.num_sens){
+            var num_sens = parseInt(query.num_sens);
+         }
+         else{
+         // If not specified default to 0
+            var num_sens = 0;
+         }
+         // Send a message to console log
+         //console.log('Database query request from '+ request.connection.remoteAddress +' for ' + '.');
+         // call selectTemp function to get data from database
+         selectTempnow(num_sens, function(data){
+            response.writeHead(200, { "Content-type": "application/json" });		
+	         response.end(JSON.stringify(data), "ascii");
+         });
+      return;
+      }
+     
+      // Handler for favicon.ico requests
+		if (pathfile == '/favicon.ico'){
+			response.writeHead(200, {'Content-Type': 'image/x-icon'});
+			response.end();
+
+			// Optionally log favicon requests.
+			//console.log('favicon requested');
+			return;
+		}
+
+		var body = '';
+    if(request.method === 'POST'){
+       // response.end('post');
+       console.log('Request found with POST method');     
+        request.on('data', function (data) {
+            body += data;
+            console.log('got data:'+data);
+        });
+    request.on('end', function () {
+ 		
+ 		//write network ip changes
+		var POST = qs.parse(body);
+ 		if (POST.dhcp) {
+ 			var result = 'auto lo' + "\n";
+			result = result + "\n";
+			result = result + 'iface lo inet loopback' + "\n";
+			result = result + 'iface eth0 inet dhcp' + "\n";
+			result = result + "\n";
+			result = result + 'auto wlan0' + "\n";
+			result = result + 'allow-hotplug wlan0' + "\n";
+			result = result + 'iface wlan0 inet manual ' + "\n";
+			result = result + 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
+ 			result = result + 'iface default inet dhcp' + "\n";
+ 			fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
+     			if (err) return console.log(err);
+  				});
+  				
+ 			var dns = '';
+ 			fs.writeFile('/etc/resolv.conf', dns, 'utf8', function (err) {
+     			if (err) return console.log(err);
+			});
+ 		}
+ 		if (POST.ip && POST.netmask && POST.gateway) {
+			var result = 'auto lo' + "\n";
+			result = result + "\n";
+			result = result + 'iface lo inet loopback' + "\n";
+			result = result + 'iface eth0 inet dhcp' + "\n";
+			result = result + "\n";
+			result = result + 'auto wlan0' + "\n";
+			result = result + 'allow-hotplug wlan0' + "\n";
+			result = result + 'iface wlan0 inet manual ' + "\n";
+			result = result + 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
+			result = result + 'iface default inet static' + "\n";
+        	result = result + "\t" + 'address ' + POST.ip + "\n";
+        	result = result + "\t" + 'netmask ' + POST.netmask + "\n";
+        	result = result + "\t" + 'gateway ' + POST.gateway + "\n";
+			fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
+     				if (err) return console.log(err);
+  				});
+  		}
+  				
+		//write dns changes
+		if (POST.dns1) {
+  			var dns = 'nameserver ' + POST.dns1 + "\n"
+  			if (POST.dns2) {
+  				dns = 'nameserver ' + POST.dns2 + "\n";
+  				}
+  			fs.writeFile('/etc/resolv.conf', dns, 'utf8', function (err) {
+     			if (err) return console.log(err);
+			});
+		}
+		
+		//write wireless changes
+		if (POST.ssid && POST.psk) {
+  			var wireless = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev' + "\n";
+  			wireless = wireless + 'update_config=1' + "\n";
+  			wireless = wireless + "\n";
+  			wireless = wireless + 'network={' + "\n";
+			wireless = wireless + "\t" + 'ssid="' + POST.ssid + '"' + "\n";
+			wireless = wireless + "\t" + 'proto=' + POST.enctype + "\n";
+			wireless = wireless + "\t" + 'key_mgmt=WPA-PSK' + "\n";
+			wireless = wireless + "\t" + 'pairwise=CCMP TKIP' + "\n";
+			wireless = wireless + "\t" + 'group=CCMP TKIP' + "\n";
+			wireless = wireless + "\t" + 'psk="' + POST.psk + '"' + "\n";
+			wireless = wireless + '}' + "\n";
+			
+  			fs.writeFile('/etc/wpa_supplicant/wpa_supplicant.conf', wireless, 'utf8', function (err) {
+     			if (err) return console.log(err);
+			});
+		}
+		response.writeHead(301,
+  			{Location: 'index.html'}
+		);
+        response.end();
+    	});
+    	}
+		
+		
+		else {
+			// Print requested file to terminal
+			//console.log('Request from '+ request.connection.remoteAddress +' for: ' + pathfile);
+
+			// Serve file using node-static			
+			staticServer.serve(request, response, function (err, result) {
+					if (err){
+						// Log the error
+						util.error("Error serving " + request.url + " - " + err.message);
+						
+						// Respond to the client
+						response.writeHead(err.status, err.headers);
+						response.end('Error 404 - file not found');
+						return;
+						}
+					return;	
+					})
+		}
+});
+
+// Enable server
+server.listen(80);
+// Log message
+console.log('Server running at http://localhost:80');
+

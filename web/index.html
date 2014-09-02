@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>BBQ Temperature Monitor</title>
+	   	<meta name="viewport" content="width=device-width, initial-scale=1">
+	   	<meta name="version" content="0.1">
+		<script src="js/jquery-1.8.3.min.js" type="text/javascript"></script>
+		<script src="js/highcharts.js" type="text/javascript"></script>
+		<script src="js/bootstrap.min.js" type="text/javascript"></script>
+		<link href="css/bootstrap.min.css" rel="stylesheet" media="all">
+		<script type="text/javascript">
+		
+		var chart; // global chart variable
+		var firstrun;
+		var sens;
+
+		// Get data from Pi NodeJS server
+		function getData(){
+			if (!firstrun) { //only plot last hours of data the first time
+				firstrun = true;
+				
+				for (s = 0; s < 3; s++) {
+				$.getJSON('./temperature_query.json?num_sens='+s, function(data){
+					// Create the series
+					var series  = chart.series[data.temperature_record[0].sensnum],
+						shift = series.data.length > 10; // shift if the series longer than 60
+						chart.series[data.temperature_record[0].sensnum].setData(data.temperature_record, true, false, true);
+				});
+				}
+			}
+
+			for (s = 0; s < 3; s++) {
+			$.getJSON('./temperature_now.json?num_sens='+s, function(data) {
+				//alert(data.temperature_record[0].sensnum);
+				var series  = chart.series[data.temperature_record[0].sensnum],
+					shift = series.data.length > 60; // shift if the series longer than 20
+				chart.series[data.temperature_record[0].sensnum].addPoint([data.temperature_record[0].timestamp, data.temperature_record[0].temp], true, shift);
+				});
+			}	
+			setTimeout(getData, 60000);
+		}
+	</script>
+
+	<script type="text/javascript">
+   // Configure the plot
+	$(document).ready(function() {
+	   
+	   Highcharts.setOptions({
+        global: {
+            timezoneOffset: 5 * 60
+        }
+    });
+	   
+	   chart = new Highcharts.Chart({
+		
+		chart: {
+		    renderTo: 'container',
+		    defaultSeriesType: 'spline',
+		    events: {
+		        load: getData
+		    }
+		},
+		title: {
+		    text: 'Temperature Plot'
+		},
+		xAxis: {
+		    type: 'datetime',
+		    tickInterval: 300 * 1000,
+		    minRange: 3600000,
+		    //minorTickInterval; 60 * 1000,
+		    tickPixelInterval: 50,
+		    maxZoom: 20 * 1000,
+		    title: {
+			   text: 'Time ',
+			   margin: 15
+			}
+		},
+		yAxis: {
+		    minPadding: .04,
+		    maxPadding: .04,
+		    title: {
+		        text: 'Temperature',
+		        margin: 15
+		    }
+		},
+		series: [{name: 'Sensor 1',
+			data: []},
+			{ name: 'Sensor 2',
+			data: []},
+			{ name: 'Sensor 3',
+			data: []
+		}]
+	    });        
+	});
+	</script>
+	
+	<script>
+        function getTemp1Now()
+        {
+        	$.getJSON('./temperature_now.json?num_sens=0', function(data) {
+        		var output="";
+       			output+= "<br>Sensor 1<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
+       			//output+= "<br>Sensor 1<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
+        		document.getElementById("sensor1temp").innerHTML=output;
+  			});
+ 	 	}
+ 	 	$(document).ready(function () {
+            var run = getTemp1Now();
+    	setInterval(function() {
+        	var run = getTemp1Now();
+    	}, 60000);
+		});
+    </script>
+    
+    <script>
+		function getTemp2Now()
+        {
+        	$.getJSON('./temperature_now.json?num_sens=1', function(data) {
+        		var output="";
+       			output+= "<br>Sensor 2<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
+       			//output+= "<br>Sensor 2<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
+        		document.getElementById("sensor2temp").innerHTML=output;
+  			});
+ 	 	}
+ 	 	$(document).ready(function () {
+            var run = getTemp2Now();
+    	setInterval(function() {
+        	var run = getTemp2Now();
+    	}, 60000);
+		});
+    </script>
+    
+    <script>
+ 	 	function getTemp3Now()
+        {
+        	$.getJSON('./temperature_now.json?num_sens=2', function(data) {
+        		var output="";
+       			output+= "<br>Sensor 3<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
+				//output+= "<br>Sensor 3<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
+        		document.getElementById("sensor3temp").innerHTML=output;
+  			});
+ 	 	}
+ 	 	$(document).ready(function () {
+            var run = getTemp3Now();
+    	setInterval(function() {
+        	var run = getTemp3Now();
+    	}, 60000);
+		});
+    </script>
+	</head>
+
+	<body>
+	<div class="container-fluid">
+		<!-- Blank Line -->
+		<div class="row">
+			<div class="col-md-12"></div>
+		</div>
+	
+		<!-- Real-time Temp Buttons -->
+		<div class="row">
+		<h4>
+				<div class="col-md-4 col-xs-4" id="sensor1temp" style="background-color: #7cb5ec; border-radius: 35px; text-align:center; font: arial; color: #ffffff;"></div>
+				<div class="col-md-4 col-xs-4" id="sensor2temp" style="background-color: #434348; border-radius: 40px; text-align:center; font: arial; color: #ffffff;"></div>
+				<div class="col-md-4 col-xs-4" id="sensor3temp" style="background-color: #90ed7d; border-radius: 40px; text-align:center; font: arial; color: #ffffff;"></div>
+		</h4>
+		</div>
+		<br>
+	
+		<!-- Chart Div -->
+		<div id="container" style="width: 100%; height: 400px"></div>
+	
+		<div class="row">
+			<div class="col-md-12"></div>
+		</div>
+	
+	
+		<div class="row">
+			<div class="col-md-1" align ="left">
+				<button class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+				<span class="glyphicon glyphicon-wrench"></span>
+				Configure
+				</button>	
+			</div>
+		</div>
+
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+			  		<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="myModalLabel">Configuration</h4>
+			  		</div>
+			  		<div class="modal-body">
+			  		<form class="form-horizontal well" action="#" method="POST">
+						<ul class="nav nav-tabs">
+							<li class="active"><a href="#tab1" data-toggle="tab">IP Settings</a></li>
+							<li><a href="#tab2" data-toggle="tab">Wireless Settings</a></li>
+						</ul>
+						<div class="tab-content">
+							<div class="tab-pane active" id="tab1">
+								<div class="control-group">
+									<label class="control-label" for="dhcp">DHCP</label>
+									<div class="controls">
+										<input type="checkbox" name="dhcp" id="dhcp" placeholder="DHCP">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="ip">IP Address</label>
+									<div class="controls">
+										<input type="text" name="ip" id="ip" placeholder="IP Address">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="netmask">Network Mask</label>
+									<div class="controls">
+										<input type="text" name="netmask" id="netmask" placeholder="Network Mask">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="gateway">Gateway</label>
+									<div class="controls">
+										<input type="text" name="gateway" id="gateway" placeholder="Gateway">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="dns1">DNS Server #1</label>
+									<div class="controls">
+										<input type="text" name="dns1" id="dns1" placeholder="DNS Server IP">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="dns2">DNS Server #2</label>
+									<div class="controls">
+										<input type="text" name="dns2" id="dns2" placeholder="DNS Server IP">
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane" id="tab2">
+								<div class="control-group">
+									<label class="control-label" for="enctype">Encryption Type</label>
+									<div class="controls">
+										<select name="enctype" id ="enctype"">
+										<option value="WPA">WPA</option>
+										<option value="RSN">WPA2</option>
+										</select>
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="ssid">SSID</label>
+									<div class="controls">
+										<input type="text" name="ssid" id="ssid" placeholder="SSID">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="psk">Pre-Shared Key</label>
+									<div class="controls">
+										<input type="text" name="psk" id="psk" placeholder="(8-63 characters)">
+									</div>
+								</div>
+							</div>	
+						</div>	
+			  		</div>
+			  		<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						<button class ="btn btn-primary" type="submit" name="submit" id="submit" value="Submit" />Save Changes</button>
+					</form>
+			  		</div>
+				</div>
+		  	</div>
+		</div>
+		<!-- End Modal -->
+	</div>
+	</body>
+</html>
