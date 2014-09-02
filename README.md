@@ -1,7 +1,7 @@
 PIBBQMonitor
 ============
 
-Raspberry PI with 3 BBQ meat thermometers<br>
+Raspberry PI with 3 meat thermometers<br>
 Thanks to Tomas Holderness and adafruit for the code I started with for this project<br>
 https://learn.adafruit.com/reading-a-analog-in-and-controlling-audio-volume-with-the-raspberry-pi/script<br>
 https://github.com/talltom/PiThermServer<br>
@@ -9,7 +9,7 @@ https://github.com/talltom/PiThermServer<br>
 
 Description
 ============
-Raspberry PI project leveraging the MCP3008 ADC and Thermoworks TX-1001X-OP thermistor temprature probes to create a 3 sensor wireless BBQ Temperature monitor.
+Raspberry PI project leveraging the MCP3008 ADC and Thermoworks TX-1001X-OP thermistor temperature probes to create a 3 sensor wireless BBQ Temperature monitor.
 
 Dependencies
 ============
@@ -27,7 +27,7 @@ mpg321<br>
 
 Setup
 ============
-1.  Install node and its deendencies: node-sqlite3, node-static
+1.  Install node and its dependencies: node-sqlite3, node-static
 2.  Install python and other packages: <br>
     sudo apt-get install python-dev<br>
     sudo apt-get install python-setuptools<br>
