@@ -43,8 +43,8 @@ Setup
 3.  Clone git repository to /home/pi
 4.  Execute build_db.sh to create SQLite DB
 5.  Disable any webserver that may already be running on port 80.
-5.  Execute "sudo node thermserv" to start the node app.  You can enable this as a server to automatically start if you would like
-6.  Execute "sudo crontab -e" and paste the following lines into your crontab.  Logger will log the temp to the DB every minute. The dbcleanup.sh will limit the DB to 24 hours worth of data:<br>
+6.  Execute "sudo node thermserv" to start the node app.  You can enable this as a server to automatically start if you would like
+7.  Execute "sudo crontab -e" and paste the following lines into your crontab.  Logger will log the temp to the DB every minute. The dbcleanup.sh will limit the DB to 24 hours worth of data:<br>
       */1 * * * * /home/pi/logger.py<br>
       0 * * * * /home/pi/dbcleanup.sh<br>
 
