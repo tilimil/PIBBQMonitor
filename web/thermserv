@@ -134,7 +134,7 @@ var server = http.createServer(
        console.log('Request found with POST method');     
         request.on('data', function (data) {
             body += data;
-            console.log('got data:'+data);
+	    console.log('got data:'+data);
         });
     request.on('end', function () {
  		
@@ -212,6 +212,17 @@ var server = http.createServer(
   			{Location: 'index.html'}
 		);
         response.end();
+        
+        //reboot if changes were made
+        if ((POST.dhcp) || (POST.ip && POST.netmask && POST.gateway) || (POST.dns1) || (POST.ssid && POST.psk) ) {
+        	var exec = require('child_process').exec;
+			function execute(command, callback){
+    			exec(command, function(error, stdout, stderr){ callback(stdout); });
+			}
+			execute('reboot -n', function(callback){
+    			console.log(callback);
+			});
+        }
     	});
     	}
 		
