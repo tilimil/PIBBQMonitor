@@ -143,6 +143,7 @@
 			}, 60000);
 			});
 			
+			//disables fields that user should not be able to edit after enabling DHCP
 			function disableIP()
 			{
 				if(document.getElementById("dhcp").checked == true)
@@ -160,6 +161,7 @@
 				}
     		}
     		
+    		//disables fields that user should not be able to edit after enabling adhoc
     		function disableWireless()
 			{
 				if(document.getElementById("adhoc").checked == true)
