@@ -183,7 +183,7 @@ var server = http.createServer(
 			result += 'iface wlan0 inet manual ' + "\n";
 			result += 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
  			result += 'iface default inet dhcp' + "\n";
- 			fs.unlink('/etc/network/interfaces', function (err));
+ 			fs.unlink('/etc/network/interfaces');
  			fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
      			if (err) return console.log(err);
   				});
@@ -207,7 +207,7 @@ var server = http.createServer(
         	result += "\t" + 'address ' + POST.ip + "\n";
         	result += "\t" + 'netmask ' + POST.netmask + "\n";
         	result += "\t" + 'gateway ' + POST.gateway + "\n";
-			fs.unlink('/etc/network/interfaces', function (err));
+			fs.unlink('/etc/network/interfaces');
 			fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
      				if (err) return console.log(err);
   				});
@@ -219,7 +219,7 @@ var server = http.createServer(
   			if (POST.dns2) {
   				dns += 'nameserver ' + POST.dns2 + "\n";
   				}
-  			fs.unlink('/etc/resolv.conf', function (err));
+  			fs.unlink('/etc/resolv.conf');
   			fs.writeFile('/etc/resolv.conf', dns, 'utf8', function (err) {
      			if (err) return console.log(err);
 			});
@@ -236,7 +236,7 @@ var server = http.createServer(
   			alert += 's2_low_alert: ' + POST.s2low + "\n"
   			alert += 's3_high_alert: ' + POST.s3high + "\n"
   			alert += 's3_low_alert: ' + POST.s3low + "\n"
-  			fs.unlink('/home/pi/alerts.cfg', function (err));
+  			fs.unlink('/home/pi/alerts.cfg');
   			fs.writeFile('/home/pi/alerts.cfg', alert, 'utf8', function (err) {
      			if (err) return console.log(err);
 			});
@@ -250,7 +250,7 @@ var server = http.createServer(
   			emailcfg += 'smtpport: ' + POST.smtpport + "\n"
   			emailcfg += 'smtpuser: ' + POST.smtpuser + "\n"
   			emailcfg += 'smtppass: ' + POST.smtppass + "\n"
-  			fs.unlink('/home/pi/email.cfg', function (err));
+  			fs.unlink('/home/pi/email.cfg');
   			fs.writeFile('/home/pi/email.cfg', emailcfg, 'utf8', function (err) {
      			if (err) return console.log(err);
 			});
@@ -271,7 +271,7 @@ var server = http.createServer(
         	result += "\t" + 'wireless-channel 1' + "\n";
         	result += "\t" + 'wireless-essid ' + POST.ssid + "\n";
         	result += "\t" + 'wireless-mode ad-hoc' + "\n";
-        	fs.unlink('/etc/network/interfaces', function (err));
+        	fs.unlink('/etc/network/interfaces');
         	fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
         	//fs.writeFileSync('/etc/network/interfaces', result, 'utf8');
      				if (err) return console.log(err);
@@ -288,16 +288,25 @@ var server = http.createServer(
 			dhcp += 'max-lease-time 7200;' + "\n";	
 			dhcp += 'authoritative;' + "\n";	
 			dhcp += 'log-facility local7;' + "\n";	
-			dhcp += 'subnet ' + network + ' netmask ' + POST.netmask + '{' + "\n";
+			dhcp += 'subnet ' + network + '.0 netmask ' + POST.netmask + '{' + "\n";
   			dhcp += 'range ' + network + '.200' + ' ' + network + '.250' + ';' + "\n";
 			dhcp += '}' + "\n";
 			dhcp += 'ddns-update-style none;' + "\n";	
 			dhcp += 'option domain-name "example.org";' + "\n";	
 			dhcp += 'option domain-name-servers ns1.example.org, ns2.example.org;' + "\n";	
 			dhcp += 'log-facility local7;' + "\n";	
-			fs.unlink('/etc/dhcp/dhcpd.conf', function (err));
+			fs.unlink('/etc/dhcp/dhcpd.conf');
 			fs.writeFile('/etc/dhcp/dhcpd.conf', dhcp, 'utf8', function (err) {
      			if (err) return console.log(err);
+			});
+			
+			//enable dhcp server
+			var exec = require('child_process').exec;
+			function execute(command, callback){
+    			exec(command, function(error, stdout, stderr){ callback(stdout); });
+			}
+			execute('update-rc.d isc-dhcp-server defaults', function(callback){
+    			console.log(callback);
 			});
 		}
 		else if (POST.ssid && POST.psk) {
@@ -312,7 +321,7 @@ var server = http.createServer(
 			wireless += "\t" + 'group=CCMP TKIP' + "\n";
 			wireless += "\t" + 'psk="' + POST.psk + '"' + "\n";
 			wireless += '}' + "\n";
-			fs.unlink('/etc/wpa_supplicant/wpa_supplicant.conf', function (err));
+			fs.unlink('/etc/wpa_supplicant/wpa_supplicant.conf');
   			fs.writeFile('/etc/wpa_supplicant/wpa_supplicant.conf', wireless, 'utf8', function (err) {
      			if (err) return console.log(err);
 			});
