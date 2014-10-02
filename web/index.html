@@ -142,6 +142,34 @@
 				var run = getTemp3Now();
 			}, 60000);
 			});
+			
+			function disableIP()
+			{
+				if(document.getElementById("dhcp").checked == true)
+				{
+					document.getElementById("ip").value = '';
+					document.getElementById("netmask").value = '';
+					document.getElementById("gateway").value = '';
+					document.getElementById("dns1").value = '';
+					document.getElementById("dns2").value = '';
+					document.getElementById("ip").disabled = true;
+					document.getElementById("netmask").disabled = true;
+					document.getElementById("gateway").disabled = true;
+					document.getElementById("dns1").disabled = true;
+					document.getElementById("dns2").disabled = true;
+				}
+    		}
+    		
+    		function disableWireless()
+			{
+				if(document.getElementById("adhoc").checked == true)
+				{
+					document.getElementById("enctype").value = '';
+					document.getElementById("psk").value = '';
+					document.getElementById("enctype").disabled = true;
+					document.getElementById("psk").disabled = true;
+				}
+    		}
 		
 			function getConfigs()
 			{
@@ -149,9 +177,20 @@
 				
 					$.getJSON('./configs.json', function(data) {
 							// dynamically check the dhcp box if value is on
+							// disable and clear the other ip fields
 							if ( data.dhcp == 'on' )
 							{
 								document.getElementById("dhcp").checked = true;
+								document.getElementById("ip").disabled = true;
+								document.getElementById("netmask").disabled = true;
+								document.getElementById("gateway").disabled = true;
+								document.getElementById("dns1").disabled = true;
+								document.getElementById("dns2").disabled = true;
+								document.getElementById("ip").reset();
+								document.getElementById("netmask").reset();
+								document.getElementById("gateway").reset();
+								document.getElementById("dns1").reset();
+								document.getElementById("dns2").reset();
 							}
 							if ( data.dhcp == 'off' )
 							{
@@ -162,9 +201,15 @@
 							document.getElementById("gateway").value = data.gateway;
 							document.getElementById("dns1").value = data.dns1;
 							document.getElementById("dns2").value = data.dns2;
+							// dynamically check the dhcp box if value is on
+							// disable and clear the encryption and psk fields
 							if ( data.adhoc == 'on' )
 							{
 								document.getElementById("adhoc").checked = true;
+								document.getElementById("enctype").disabled = true;
+								document.getElementById("psk").disabled = true;
+								document.getElementById("enctype").reset();
+								document.getElementById("psk").reset();
 							}
 							if ( data.adhoc == 'off' )
 							{
@@ -247,7 +292,7 @@
 								<div class="control-group">
 									<label class="control-label" for="dhcp">DHCP</label>
 									<div class="controls">
-										<input type="checkbox" name="dhcp" id="dhcp" checked>
+										<input type="checkbox" name="dhcp" id="dhcp" onclick="disableIP()">
 									</div>
 								</div>
 								<div class="control-group">
@@ -288,7 +333,7 @@
 								<div class="control-group">
 									<label class="control-label" for="adhoc">Ad-Hoc Enabled</label>
 									<div class="controls">
-										<input type="checkbox" name="adhoc" id="adhoc" placeholder="adhoc">
+										<input type="checkbox" name="adhoc" id="adhoc" placeholder="adhoc" onclick="disableWireless()">
 									</div>
 								</div>
 								<div class="control-group">
