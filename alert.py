@@ -86,7 +86,7 @@ for sensor in xrange(0,3):
 		if re.search("high", alert) and int(SensTemp) > int(ConfigSectionMap("Config")[alert]):
 			print "High Threshold exceeded for %s" % alert
 			if int(holddown[count]) == int(ConfigSectionMap("Config")['alerthold']):
-				msg += 'Sensor ' + str(Sensnum) + 'has exceeded ' + str(ConfigSectionMap("Config")[alert]) + "degrees F\n"
+				msg += 'Sensor ' + str(Sensnum) + ' has exceeded ' + str(ConfigSectionMap("Config")[alert]) + " degrees F\n"
 				#print "Reached holddown timer for %s\n" % (alert)
 				holddown[count] = 0
 				count += 1
