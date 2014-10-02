@@ -10,143 +10,186 @@
 		<link href="css/bootstrap.min.css" rel="stylesheet" media="all">
 		<script type="text/javascript">
 		
-		var chart; // global chart variable
-		var firstrun;
-		var sens;
+			var chart; // global chart variable
+			var firstrun;
+			var sens;
 
-		// Get data from Pi NodeJS server
-		function getData(){
-			if (!firstrun) { //only plot last hours of data the first time
-				firstrun = true;
+			// Get data from Pi NodeJS server
+			function getData(){
+				if (!firstrun) { //only plot last hours of data the first time
+					firstrun = true;
 				
-				for (s = 0; s < 3; s++) {
-				$.getJSON('./temperature_query.json?num_sens='+s, function(data){
-					// Create the series
-					var series  = chart.series[data.temperature_record[0].sensnum],
-						shift = series.data.length > 10; // shift if the series longer than 60
-						chart.series[data.temperature_record[0].sensnum].setData(data.temperature_record, true, false, true);
-				});
+					for (s = 0; s < 3; s++) {
+					$.getJSON('./temperature_query.json?num_sens='+s, function(data){
+						// Create the series
+						var series  = chart.series[data.temperature_record[0].sensnum],
+							shift = series.data.length > 10; // shift if the series longer than 60
+							chart.series[data.temperature_record[0].sensnum].setData(data.temperature_record, true, false, true);
+					});
+					}
 				}
+
+				for (s = 0; s < 3; s++) {
+				$.getJSON('./temperature_now.json?num_sens='+s, function(data) {
+					//alert(data.temperature_record[0].sensnum);
+					var series  = chart.series[data.temperature_record[0].sensnum],
+						shift = series.data.length > 60; // shift if the series longer than 20
+					chart.series[data.temperature_record[0].sensnum].addPoint([data.temperature_record[0].timestamp, data.temperature_record[0].temp], true, shift);
+					});
+				}	
+				setTimeout(getData, 60000);
 			}
+		</script>
 
-			for (s = 0; s < 3; s++) {
-			$.getJSON('./temperature_now.json?num_sens='+s, function(data) {
-				//alert(data.temperature_record[0].sensnum);
-				var series  = chart.series[data.temperature_record[0].sensnum],
-					shift = series.data.length > 60; // shift if the series longer than 20
-				chart.series[data.temperature_record[0].sensnum].addPoint([data.temperature_record[0].timestamp, data.temperature_record[0].temp], true, shift);
-				});
-			}	
-			setTimeout(getData, 60000);
-		}
-	</script>
+		<script type="text/javascript">
+	   // Configure the plot
+		$(document).ready(function() {
 
-	<script type="text/javascript">
-   // Configure the plot
-	$(document).ready(function() {
+		   Highcharts.setOptions({
+			global: {
+				timezoneOffset: 5 * 60
+			}
+		});
 	   
-	   Highcharts.setOptions({
-        global: {
-            timezoneOffset: 5 * 60
-        }
-    });
-	   
-	   chart = new Highcharts.Chart({
+		   chart = new Highcharts.Chart({
 		
-		chart: {
-		    renderTo: 'container',
-		    defaultSeriesType: 'spline',
-		    events: {
-		        load: getData
-		    }
-		},
-		title: {
-		    text: 'Temperature Plot'
-		},
-		xAxis: {
-		    type: 'datetime',
-		    tickInterval: 300 * 1000,
-		    minRange: 3600000,
-		    //minorTickInterval; 60 * 1000,
-		    tickPixelInterval: 50,
-		    maxZoom: 20 * 1000,
-		    title: {
-			   text: 'Time ',
-			   margin: 15
-			}
-		},
-		yAxis: {
-		    minPadding: .04,
-		    maxPadding: .04,
-		    title: {
-		        text: 'Temperature',
-		        margin: 15
-		    }
-		},
-		series: [{name: 'Sensor 1',
-			data: []},
-			{ name: 'Sensor 2',
-			data: []},
-			{ name: 'Sensor 3',
-			data: []
-		}]
-	    });        
-	});
-	</script>
+			chart: {
+				renderTo: 'container',
+				defaultSeriesType: 'spline',
+				events: {
+					load: getData
+				}
+			},
+			title: {
+				text: 'Temperature Plot'
+			},
+			xAxis: {
+				type: 'datetime',
+				tickInterval: 300 * 1000,
+				minRange: 3600000,
+				//minorTickInterval; 60 * 1000,
+				tickPixelInterval: 50,
+				maxZoom: 20 * 1000,
+				title: {
+				   text: 'Time ',
+				   margin: 15
+				}
+			},
+			yAxis: {
+				minPadding: .04,
+				maxPadding: .04,
+				title: {
+					text: 'Temperature',
+					margin: 15
+				}
+			},
+			series: [{name: 'Sensor 1',
+				data: []},
+				{ name: 'Sensor 2',
+				data: []},
+				{ name: 'Sensor 3',
+				data: []
+			}]
+			});        
+		});
+		</script>
 	
-	<script>
-        function getTemp1Now()
-        {
-        	$.getJSON('./temperature_now.json?num_sens=0', function(data) {
-        		var output="";
-       			output+= "<br>Sensor 1<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
-       			//output+= "<br>Sensor 1<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
-        		document.getElementById("sensor1temp").innerHTML=output;
-  			});
- 	 	}
- 	 	$(document).ready(function () {
-            var run = getTemp1Now();
-    	setInterval(function() {
-        	var run = getTemp1Now();
-    	}, 60000);
-		});
-    </script>
-    
-    <script>
-		function getTemp2Now()
-        {
-        	$.getJSON('./temperature_now.json?num_sens=1', function(data) {
-        		var output="";
-       			output+= "<br>Sensor 2<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
-       			//output+= "<br>Sensor 2<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
-        		document.getElementById("sensor2temp").innerHTML=output;
-  			});
- 	 	}
- 	 	$(document).ready(function () {
-            var run = getTemp2Now();
-    	setInterval(function() {
-        	var run = getTemp2Now();
-    	}, 60000);
-		});
-    </script>
-    
-    <script>
- 	 	function getTemp3Now()
-        {
-        	$.getJSON('./temperature_now.json?num_sens=2', function(data) {
-        		var output="";
-       			output+= "<br>Sensor 3<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
-				//output+= "<br>Sensor 3<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
-        		document.getElementById("sensor3temp").innerHTML=output;
-  			});
- 	 	}
- 	 	$(document).ready(function () {
-            var run = getTemp3Now();
-    	setInterval(function() {
-        	var run = getTemp3Now();
-    	}, 60000);
-		});
-    </script>
+		<script type="text/javascript">
+			function getTemp1Now()
+			{
+				$.getJSON('./temperature_now.json?num_sens=0', function(data) {
+					var output="";
+					output+= "<br>Sensor 1<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
+					//output+= "<br>Sensor 1<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
+					document.getElementById("sensor1temp").innerHTML=output;
+				});
+			}
+			$(document).ready(function () {
+				var run = getTemp1Now();
+			setInterval(function() {
+				var run = getTemp1Now();
+			}, 60000);
+			});
+
+			function getTemp2Now()
+			{
+				$.getJSON('./temperature_now.json?num_sens=1', function(data) {
+					var output="";
+					output+= "<br>Sensor 2<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
+					//output+= "<br>Sensor 2<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
+					document.getElementById("sensor2temp").innerHTML=output;
+				});
+			}
+			$(document).ready(function () {
+				var run = getTemp2Now();
+			setInterval(function() {
+				var run = getTemp2Now();
+			}, 60000);
+			});
+
+			function getTemp3Now()
+			{
+				$.getJSON('./temperature_now.json?num_sens=2', function(data) {
+					var output="";
+					output+= "<br>Sensor 3<br>" + data.temperature_record[0].temp + String.fromCharCode(176) + "F<br><br>";
+					//output+= "<br>Sensor 3<br>" + '76' + String.fromCharCode(176) + "F<br><br>";
+					document.getElementById("sensor3temp").innerHTML=output;
+				});
+			}
+			$(document).ready(function () {
+				var run = getTemp3Now();
+			setInterval(function() {
+				var run = getTemp3Now();
+			}, 60000);
+			});
+		
+			function getConfigs()
+			{
+					$('#myModal').modal("show");
+				
+					$.getJSON('./configs.json', function(data) {
+							// dynamically check the dhcp box if value is on
+							if ( data.dhcp == 'on' )
+							{
+								document.getElementById("dhcp").checked = true;
+							}
+							if ( data.dhcp == 'off' )
+							{
+								document.getElementById("dhcp").checked = false;
+							}
+							document.getElementById("ip").value = data.ip;
+							document.getElementById("netmask").value = data.netmask;
+							document.getElementById("gateway").value = data.gateway;
+							document.getElementById("dns1").value = data.dns1;
+							document.getElementById("dns2").value = data.dns2;
+							if ( data.adhoc == 'on' )
+							{
+								document.getElementById("adhoc").checked = true;
+							}
+							if ( data.adhoc == 'off' )
+							{
+								document.getElementById("adhoc").checked = false;
+							}
+							document.getElementById("enctype").value = data.enctype;
+							document.getElementById("ssid").value = data.ssid;
+							document.getElementById("psk").value = data.psk;
+							document.getElementById("email").value = data.email;
+							document.getElementById("alerthold").value = data.alerthold;
+							document.getElementById("s1high").value = data.s1high;
+							document.getElementById("s1low").value = data.s1low;
+							document.getElementById("s2high").value = data.s2high;
+							document.getElementById("s2low").value = data.s2low;
+							document.getElementById("s3high").value = data.s3high;
+							document.getElementById("s3low").value = data.s3low;
+							document.getElementById("smtpemail").value = data.smtpemail;
+							document.getElementById("smtpsrv").value = data.smtpsrv;
+							document.getElementById("smtpport").value = data.smtpport;
+							document.getElementById("smtpuser").value = data.smtpuser;
+							document.getElementById("smtppass").value = data.smtppass;
+					});
+			}
+		</script>
+
 	</head>
 
 	<body>
@@ -176,13 +219,14 @@
 	
 		<div class="row">
 			<div class="col-md-1" align ="left">
-				<button class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+				<button class="btn btn-primary" onclick="getConfigs()">
 				<span class="glyphicon glyphicon-wrench"></span>
 				Configure
 				</button>	
 			</div>
 		</div>
 
+		<div id="configs"></div>
 		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
@@ -195,13 +239,15 @@
 						<ul class="nav nav-tabs">
 							<li class="active"><a href="#tab1" data-toggle="tab">IP Settings</a></li>
 							<li><a href="#tab2" data-toggle="tab">Wireless Settings</a></li>
+							<li><a href="#tab3" data-toggle="tab">Sensor Alerts</a></li>
+							<li><a href="#tab4" data-toggle="tab">Email Configuration</a></li>
 						</ul>
 						<div class="tab-content">
 							<div class="tab-pane active" id="tab1">
 								<div class="control-group">
 									<label class="control-label" for="dhcp">DHCP</label>
 									<div class="controls">
-										<input type="checkbox" name="dhcp" id="dhcp" placeholder="DHCP">
+										<input type="checkbox" name="dhcp" id="dhcp" checked>
 									</div>
 								</div>
 								<div class="control-group">
@@ -234,8 +280,17 @@
 										<input type="text" name="dns2" id="dns2" placeholder="DNS Server IP">
 									</div>
 								</div>
+								<div class="control-group">
+									<br><label class="control-label">* Saving changes on this tab will cause an automatic reboot</label>
+								</div>
 							</div>
 							<div class="tab-pane" id="tab2">
+								<div class="control-group">
+									<label class="control-label" for="adhoc">Ad-Hoc Enabled</label>
+									<div class="controls">
+										<input type="checkbox" name="adhoc" id="adhoc" placeholder="adhoc">
+									</div>
+								</div>
 								<div class="control-group">
 									<label class="control-label" for="enctype">Encryption Type</label>
 									<div class="controls">
@@ -257,9 +312,96 @@
 										<input type="text" name="psk" id="psk" placeholder="(8-63 characters)">
 									</div>
 								</div>
-							</div>	
+								<div class="control-group">
+									<br><label class="control-label">* Saving changes on this tab will cause an automatic reboot</label>
+								</div>
+							</div>
+							<div class="tab-pane" id="tab3">
+								<div class="control-group">
+									<label class="control-label" for="email">Alert Email Address</label>
+									<div class="controls">
+										<input type="text" name="email" id="email" placeholder="email@domain.com">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="alerthold">Alert Hold Time (mins) - send alert after X mins exceeding threshold</label>
+									<div class="controls">
+										<input type="text" name="alerthold" id="alerthold" placeholder="3">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="s1high">Sensor 1 - High Threshold (Degrees F)</label>
+									<div class="controls">
+										<input type="text" name="s1high" id="s1high" placeholder="">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="s1low">Sensor 1 - Low Threshold (Degrees F)</label>
+									<div class="controls">
+										<input type="text" name="s1low" id="s1low" placeholder="">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="s2high">Sensor 2 - High Threshold (Degrees F)</label>
+									<div class="controls">
+										<input type="text" name="s2high" id="s2high" placeholder="">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="s2low">Sensor 2 - Low Threshold (Degrees F)</label>
+									<div class="controls">
+										<input type="text" name="s2low" id="s2low" placeholder="">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="s3high">Sensor 3 - High Threshold (Degrees F)</label>
+									<div class="controls">
+										<input type="text" name="s3high" id="s3high" placeholder="">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="s3low">Sensor 3 - Low Threshold (Degrees F)</label>
+									<div class="controls">
+										<input type="text" name="s3low" id="s3low" placeholder="">
+									</div>
+								</div>
+								<div class="control-group">
+									<br><label class="control-label">* Set alert threshold to 0 to disable an alert</label>
+								</div>
+							</div>
+							<div class="tab-pane" id="tab4">
+								<div class="control-group">
+									<label class="control-label" for="smtpemail">Sender Email Address</label>
+									<div class="controls">
+										<input type="text" name="smtpemail" id="smtpemail" placeholder="email@domain.com">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="smtpsrv">SMTP server</label>
+									<div class="controls">
+										<input type="text" name="smtpsrv" id="smtpsrv" placeholder="smtp.gmail.com">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="smtpport">SMTP Port Number</label>
+									<div class="controls">
+										<input type="text" name="smtpport" id="smtpport" placeholder="587">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="smtpuser">Email username</label>
+									<div class="controls">
+										<input type="text" name="smtpuser" id="smtpuser">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="smtppass">Email password</label>
+									<div class="controls">
+										<input type="text" name="smtppass" id="smtppass">
+									</div>
+								</div>
+							</div>		
 						</div>	
-					<br>*** Making configuration changes will cause an automatic reboot
 			  		</div>
 			  		<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

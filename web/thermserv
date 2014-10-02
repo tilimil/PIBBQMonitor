@@ -117,7 +117,18 @@ var server = http.createServer(
          });
       return;
       }
-     
+      
+      if (pathfile == '/configs.json'){
+        fs.readFile('formdata', 'utf8', function (err,data) {
+  			if (err) {
+    			return console.log(err);
+  			}
+  			response.writeHead(200, { "Content-type": "application/json" });		
+	        response.end(data, "ascii");
+		});  
+      return;
+      }
+      
       // Handler for favicon.ico requests
 		if (pathfile == '/favicon.ico'){
 			response.writeHead(200, {'Content-Type': 'image/x-icon'});
@@ -138,19 +149,41 @@ var server = http.createServer(
         });
     request.on('end', function () {
  		
+ 		var POST = qs.parse(body);
+ 		
+ 		//forms leave checkboxe inputs undefined, setting dhcp and adhoc to off 
+ 		//so that accurate status can be set in formdata
+ 		if (!POST.dhcp) {
+ 			POST.dhcp = 'off';
+ 		}
+ 		
+ 		if (!POST.adhoc) {
+ 			POST.adhoc = 'off';
+ 		}
+ 		
+ 		//write formdata to a file named formdata
+ 		var json_data = JSON.stringify(POST);
+ 		fs.writeFile("formdata", json_data, function(err) {
+    		if(err) {
+        	console.log(err);
+   		 	} else {
+        	console.log("The file was saved!");
+    		}
+		}); 
+		
  		//write network ip changes
-		var POST = qs.parse(body);
- 		if (POST.dhcp) {
+ 		if (POST.dhcp == 'on') {
  			var result = 'auto lo' + "\n";
-			result = result + "\n";
-			result = result + 'iface lo inet loopback' + "\n";
-			result = result + 'iface eth0 inet dhcp' + "\n";
-			result = result + "\n";
-			result = result + 'auto wlan0' + "\n";
-			result = result + 'allow-hotplug wlan0' + "\n";
-			result = result + 'iface wlan0 inet manual ' + "\n";
-			result = result + 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
- 			result = result + 'iface default inet dhcp' + "\n";
+			result += "\n";
+			result += 'iface lo inet loopback' + "\n";
+			result += 'iface eth0 inet dhcp' + "\n";
+			result += "\n";
+			result += 'auto wlan0' + "\n";
+			result += 'allow-hotplug wlan0' + "\n";
+			result += 'iface wlan0 inet manual ' + "\n";
+			result += 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
+ 			result += 'iface default inet dhcp' + "\n";
+ 			fs.unlink('/etc/network/interfaces', function (err));
  			fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
      			if (err) return console.log(err);
   				});
@@ -160,20 +193,21 @@ var server = http.createServer(
      			if (err) return console.log(err);
 			});
  		}
- 		if (POST.ip && POST.netmask && POST.gateway) {
+ 		else if (POST.ip && POST.netmask && POST.gateway) {
 			var result = 'auto lo' + "\n";
-			result = result + "\n";
-			result = result + 'iface lo inet loopback' + "\n";
-			result = result + 'iface eth0 inet dhcp' + "\n";
-			result = result + "\n";
-			result = result + 'auto wlan0' + "\n";
-			result = result + 'allow-hotplug wlan0' + "\n";
-			result = result + 'iface wlan0 inet manual ' + "\n";
-			result = result + 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
-			result = result + 'iface default inet static' + "\n";
-        	result = result + "\t" + 'address ' + POST.ip + "\n";
-        	result = result + "\t" + 'netmask ' + POST.netmask + "\n";
-        	result = result + "\t" + 'gateway ' + POST.gateway + "\n";
+			result += "\n";
+			result += 'iface lo inet loopback' + "\n";
+			result += 'iface eth0 inet dhcp' + "\n";
+			result += "\n";
+			result += 'auto wlan0' + "\n";
+			result += 'allow-hotplug wlan0' + "\n";
+			result += 'iface wlan0 inet manual ' + "\n";
+			result += 'wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf' + "\n";
+			result += 'iface default inet static' + "\n";
+        	result += "\t" + 'address ' + POST.ip + "\n";
+        	result += "\t" + 'netmask ' + POST.netmask + "\n";
+        	result += "\t" + 'gateway ' + POST.gateway + "\n";
+			fs.unlink('/etc/network/interfaces', function (err));
 			fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
      				if (err) return console.log(err);
   				});
@@ -183,38 +217,122 @@ var server = http.createServer(
 		if (POST.dns1) {
   			var dns = 'nameserver ' + POST.dns1 + "\n"
   			if (POST.dns2) {
-  				dns = 'nameserver ' + POST.dns2 + "\n";
+  				dns += 'nameserver ' + POST.dns2 + "\n";
   				}
+  			fs.unlink('/etc/resolv.conf', function (err));
   			fs.writeFile('/etc/resolv.conf', dns, 'utf8', function (err) {
      			if (err) return console.log(err);
 			});
 		}
 		
-		//write wireless changes
-		if (POST.ssid && POST.psk) {
-  			var wireless = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev' + "\n";
-  			wireless = wireless + 'update_config=1' + "\n";
-  			wireless = wireless + "\n";
-  			wireless = wireless + 'network={' + "\n";
-			wireless = wireless + "\t" + 'ssid="' + POST.ssid + '"' + "\n";
-			wireless = wireless + "\t" + 'proto=' + POST.enctype + "\n";
-			wireless = wireless + "\t" + 'key_mgmt=WPA-PSK' + "\n";
-			wireless = wireless + "\t" + 'pairwise=CCMP TKIP' + "\n";
-			wireless = wireless + "\t" + 'group=CCMP TKIP' + "\n";
-			wireless = wireless + "\t" + 'psk="' + POST.psk + '"' + "\n";
-			wireless = wireless + '}' + "\n";
-			
-  			fs.writeFile('/etc/wpa_supplicant/wpa_supplicant.conf', wireless, 'utf8', function (err) {
+		//write sensor alert changes
+		if (POST.email) {
+  			var alert = '[Config]' + "\n"
+  			alert += 'email: ' + POST.email + "\n"
+  			alert += 'alerthold: ' + POST.alerthold + "\n"
+  			alert += 's1_high_alert: ' + POST.s1high + "\n"
+  			alert += 's1_low_alert: ' + POST.s1low + "\n"
+  			alert += 's2_high_alert: ' + POST.s2high + "\n"
+  			alert += 's2_low_alert: ' + POST.s2low + "\n"
+  			alert += 's3_high_alert: ' + POST.s3high + "\n"
+  			alert += 's3_low_alert: ' + POST.s3low + "\n"
+  			fs.unlink('/home/pi/alerts.cfg', function (err));
+  			fs.writeFile('/home/pi/alerts.cfg', alert, 'utf8', function (err) {
      			if (err) return console.log(err);
 			});
 		}
+		
+		//write email config changes
+		if (POST.smtpemail && POST.smtpsrv && POST.smtpport && POST.smtpuser && POST.smtppass) {
+  			var emailcfg = '[Config]' + "\n"
+  			emailcfg += 'smtpemail: ' + POST.smtpemail + "\n"
+  			emailcfg += 'smtpsrv: ' + POST.smtpsrv + "\n"
+  			emailcfg += 'smtpport: ' + POST.smtpport + "\n"
+  			emailcfg += 'smtpuser: ' + POST.smtpuser + "\n"
+  			emailcfg += 'smtppass: ' + POST.smtppass + "\n"
+  			fs.unlink('/home/pi/email.cfg', function (err));
+  			fs.writeFile('/home/pi/email.cfg', emailcfg, 'utf8', function (err) {
+     			if (err) return console.log(err);
+			});
+		}
+		
+		
+		//write wireless changes
+		if (POST.adhoc == 'on' && POST.ssid && POST.ip && POST.netmask) {
+			var result = 'auto lo' + "\n";
+			result += "\n";
+			result += 'iface lo inet loopback' + "\n";
+			result += 'iface eth0 inet dhcp' + "\n";
+			result += "\n";
+			result += 'auto wlan0' + "\n";
+			result += 'iface wlan0 inet static' + "\n";
+        	result += "\t" + 'address ' + POST.ip + "\n";
+        	result += "\t" + 'netmask ' + POST.netmask + "\n";
+        	result += "\t" + 'wireless-channel 1' + "\n";
+        	result += "\t" + 'wireless-essid ' + POST.ssid + "\n";
+        	result += "\t" + 'wireless-mode ad-hoc' + "\n";
+        	fs.unlink('/etc/network/interfaces', function (err));
+        	fs.writeFile('/etc/network/interfaces', result, 'utf8', function (err) {
+        	//fs.writeFileSync('/etc/network/interfaces', result, 'utf8');
+     				if (err) return console.log(err);
+  				});
+  			
+  			//get first three octets to use in dhcpd.conf
+  			var re = /(\d+)\.(\d+)\.(\d+)\.(\d+)/;
+			var str = POST.ip;
+			var network = str.replace(re, "$1.$2.$3");
+  			
+  			//write dhcp changes out to dhcpd.conf, limited to only work with /24 subnets
+  			var dhcp = 'ddns-update-style interim;' + "\n";	
+  			dhcp += 'default-lease-time 600;' + "\n";	
+			dhcp += 'max-lease-time 7200;' + "\n";	
+			dhcp += 'authoritative;' + "\n";	
+			dhcp += 'log-facility local7;' + "\n";	
+			dhcp += 'subnet ' + network + ' netmask ' + POST.netmask + '{' + "\n";
+  			dhcp += 'range ' + network + '.200' + ' ' + network + '.250' + ';' + "\n";
+			dhcp += '}' + "\n";
+			dhcp += 'ddns-update-style none;' + "\n";	
+			dhcp += 'option domain-name "example.org";' + "\n";	
+			dhcp += 'option domain-name-servers ns1.example.org, ns2.example.org;' + "\n";	
+			dhcp += 'log-facility local7;' + "\n";	
+			fs.unlink('/etc/dhcp/dhcpd.conf', function (err));
+			fs.writeFile('/etc/dhcp/dhcpd.conf', dhcp, 'utf8', function (err) {
+     			if (err) return console.log(err);
+			});
+		}
+		else if (POST.ssid && POST.psk) {
+  			var wireless = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev' + "\n";
+  			wireless += 'update_config=1' + "\n";
+  			wireless += "\n";
+  			wireless += 'network={' + "\n";
+			wireless += "\t" + 'ssid="' + POST.ssid + '"' + "\n";
+			wireless += "\t" + 'proto=' + POST.enctype + "\n";
+			wireless += "\t" + 'key_mgmt=WPA-PSK' + "\n";
+			wireless += "\t" + 'pairwise=CCMP TKIP' + "\n";
+			wireless += "\t" + 'group=CCMP TKIP' + "\n";
+			wireless += "\t" + 'psk="' + POST.psk + '"' + "\n";
+			wireless += '}' + "\n";
+			fs.unlink('/etc/wpa_supplicant/wpa_supplicant.conf', function (err));
+  			fs.writeFile('/etc/wpa_supplicant/wpa_supplicant.conf', wireless, 'utf8', function (err) {
+     			if (err) return console.log(err);
+			});
+			//disable dhcp server
+			var exec = require('child_process').exec;
+			function execute(command, callback){
+    			exec(command, function(error, stdout, stderr){ callback(stdout); });
+			}
+			execute('update-rc.d -f isc-dhcp-server remove', function(callback){
+    			console.log(callback);
+			});
+		}
+		
 		response.writeHead(301,
   			{Location: 'index.html'}
 		);
         response.end();
         
         //reboot if changes were made
-        if ((POST.dhcp) || (POST.ip && POST.netmask && POST.gateway) || (POST.dns1) || (POST.ssid && POST.psk) ) {
+        if ((POST.dhcp) || (POST.ip && POST.netmask && POST.gateway) || (POST.dns1) || (POST.ssid && POST.psk) || (POST.adhoc) ) {
         	var exec = require('child_process').exec;
 			function execute(command, callback){
     			exec(command, function(error, stdout, stderr){ callback(stdout); });
