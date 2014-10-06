@@ -34,17 +34,43 @@ mpg321<br>
 
 Setup
 ============
-1.  Install node and its dependencies: node-sqlite3, node-static
+1.  Install node
+    sudo wget http://node-arm.herokuapp.com/node_latest_armhf.deb
+    sudo dpkg -i node_latest_armhf.deb
+    Make sure node install was good by checking "sudo node-v".  Should return node version.
 2.  Install python and other packages: <br>
+    sudo apt-get upgrade
+    sudo apt-get update
     sudo apt-get install python-dev<br>
     sudo apt-get install python-setuptools<br>
     sudo easy_install rpi.gpio<br>
     sudo apt-get install alsa-utils<br>
     sudo apt-get install mpg321<br>
-3.  Clone git repository to /home/pi.  i.e. logger.py should be in /home/pi directory
-4.  Execute build_db.sh to create SQLite DB
+    sudo apt-get install sqlite3<br>
+    sudo apt-get install libsqlite3-dev<br>
+    sudo apt-get install npm<br>
+3.  Install node dependencies with NPM
+    npm install -g node-gyp
+    npm install node-static
+    npm install node-sqlite3
+4.  Clone git repository to /home/pi.  i.e. logger.py should be in /home/pi directory
+    git clone git://github.com/tilimil/PIBBQMonitor.git
+    cp -R ~pi/PIBBQMonitor/* ~pi/
+5.  Run command to create DB.  Build_db.sh is not working currently
+    sudo sqlite3 /home/pi/templog.db
+    SQLite version 3.7.13 2012-06-11 02:05:22
+    Enter ".help" for instructions
+    Enter SQL statements terminated with a ";"
+    sqlite> drop table temps; 
+    Error: no such table: temps
+    sqlite> CREATE TABLE temps(timestamp timestamp default (strftime('%s', 'now')), sensnum numeric, temp numeric); 
+    sqlite> .quit
 5.  Disable any webserver that may already be running on port 80.
-6.  Execute "sudo node thermserv" to start the node app.  You can enable this as a server to automatically start if you would like
+    sudo update-rc.d apache2 disable
+6.  Setup the thermserv node app as a service
+    sudo cp /home/pi/thermserv_initfile /etc/init.d/thermserv
+    sudo chmod 755 /etc/init.d/thermserv
+    update-rc.d thermserv defaults
 7.  Execute "sudo crontab -e" and paste the following lines into your crontab.  Logger will log the temp to the DB every minute. The dbcleanup.sh will limit the DB to 24 hours worth of data:<br>
       */1 * * * * /home/pi/logger.py<br>
       0 * * * * /home/pi/dbcleanup.sh<br>
