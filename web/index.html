@@ -171,6 +171,13 @@
 					document.getElementById("enctype").disabled = true;
 					document.getElementById("psk").disabled = true;
 				}
+				if(document.getElementById("adhoc").checked == false)
+                                {
+                                        document.getElementById("enctype").value = '';
+                                        document.getElementById("psk").value = '';
+                                        document.getElementById("enctype").disabled = false;
+                                        document.getElementById("psk").disabled = false;
+                                }
     		}
 		
 			function getConfigs()
@@ -208,10 +215,10 @@
 							if ( data.adhoc == 'on' )
 							{
 								document.getElementById("adhoc").checked = true;
-								document.getElementById("enctype").disabled = true;
-								document.getElementById("psk").disabled = true;
-								document.getElementById("enctype").reset();
-								document.getElementById("psk").reset();
+								//document.getElementById("enctype").disabled = true;
+								//document.getElementById("psk").disabled = true;
+								//document.getElementById("enctype").reset();
+								//document.getElementById("psk").reset();
 							}
 							if ( data.adhoc == 'off' )
 							{
